@@ -1,0 +1,34 @@
+{
+  "name": "emitron",
+  "version": "1.0.0",
+  "description": "A simple pub/sub library.",
+  "main": "dist/emitron.cjs.js",
+  "module": "dist/emitron.esm.js",
+  "browser": "dist/emitron.umd.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rollup -c",
+    "test": "jest",
+    "lint": "eslint . --ext .ts"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.8",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "rollup": "^4.18.0",
+    "ts-jest": "^29.1.4",
+    "tslib": "^2.6.3",
+    "typescript": "^5.8.3",
+    "@eslint/js": "^9.30.1",
+    "eslint": "^9.30.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.1",
+    "typescript-eslint": "^8.35.1"
+  },
+  "files": [
+    "dist"
+  ]
+}
