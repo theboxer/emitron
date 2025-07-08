@@ -40,8 +40,49 @@ Define your event types as a TypeScript interface (must include an index signatu
 interface MyEvents {
   foo: string;
   bar: number;
-  [key: string]: unknown; // Required for type compatibility
 }
+```
+
+### Typing Event Handlers (TypeScript)
+
+You can type your event handlers for full type safety:
+
+```typescript
+import type { Handler } from 'emitron';
+
+interface MyEvents {
+  foo: string;
+  bar: number;
+}
+
+const handler: Handler<MyEvents, 'foo'> = (payload) => {
+  // payload.eventData is string, payload.eventName is 'foo'
+  console.log(payload.eventData.toUpperCase());
+};
+
+const fooBarHandler: Handler<MyEvents, 'foo' | 'bar'> = (payload) => {
+  if (payload.eventName === 'foo') {
+    // payload.eventData is string
+    console.log('foo:', payload.eventData.toUpperCase());
+  } else if (payload.eventName === 'bar') {
+    // payload.eventData is number
+    console.log('bar:', payload.eventData + 1);
+  }
+};
+
+const wildcardHandler: Handler<MyEvents> = (payload) => {
+  // payload.eventName is keyof MyEvents, payload.eventData is MyEvents[keyof MyEvents]
+  switch (payload.eventName) {
+    case 'foo':
+      // payload.eventData is string
+      console.log('foo:', payload.eventData.toUpperCase());
+      break;
+    case 'bar':
+      // payload.eventData is number
+      console.log('bar:', payload.eventData + 1);
+      break;
+  }
+};
 ```
 
 ### Creating an Instance
@@ -54,16 +95,27 @@ const emitter = emitron<MyEvents>();
 
 ```typescript
 // Returns an unsubscribe function
-const unsubscribe = emitter.on('foo', (data, type) => {
-  console.log(`foo event:`, data);
+const unsubscribe = emitter.on('foo', (payload) => {
+  // payload.eventData is string, payload.eventName is 'foo'
+  console.log(`foo event:`, payload.eventData);
 });
 
 // Later, to remove the handler:
 unsubscribe();
 
 // Wildcard listener (receives all events)
-const unsubAll = emitter.on('*', (data, type) => {
-  console.log(`Event ${String(type)}:`, data);
+const unsubAll = emitter.on('*', (payload) => {
+  // payload.eventData is MyEvents[keyof MyEvents], payload.eventName is keyof MyEvents
+  switch (payload.eventName) {
+    case 'foo':
+      // payload.eventData is string
+      console.log('foo:', payload.eventData.toUpperCase());
+      break;
+    case 'bar':
+      // payload.eventData is number
+      console.log('bar:', payload.eventData + 1);
+      break;
+  }
 });
 ```
 
@@ -72,8 +124,9 @@ const unsubAll = emitter.on('*', (data, type) => {
 ```typescript
 emitter.on(
   'bar',
-  (data, type) => {
-    console.log('bar event (once):', data);
+  (payload) => {
+    // payload.eventData is number, payload.eventName is 'bar'
+    console.log('bar event (once):', payload.eventData);
   },
   { once: true },
 );
@@ -85,8 +138,9 @@ emitter.on(
 const controller = new AbortController();
 emitter.on(
   'foo',
-  (data, type) => {
-    console.log('foo event (abortable):', data);
+  (payload) => {
+    // payload.eventData is string, payload.eventName is 'foo'
+    console.log('foo event (abortable):', payload.eventData);
   },
   { signal: controller.signal },
 );
@@ -115,8 +169,8 @@ emitter.off('foo');
 
 - `on(eventName, handler, params?)`: Subscribe to an event. Returns an unsubscribe function. Supports wildcard (`'*'`), one-time, and abortable listeners.
 - `off(eventName, handler?)`: Unsubscribe a handler or all handlers for an event.
-- `emit(eventName, data)`: Emit an event with data.
+- `emit(eventName, data?)`: Emit an event with data.
 
 ---
 
-MIT License
+[MIT License](LICENSE)

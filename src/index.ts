@@ -51,6 +51,13 @@ const emitron = <Events extends GenericEvents>() => {
   type MyHandler = GenericHandler<Events, keyof Events>;
 
   const instance: Emitron<Events> = {
+    /**
+     * Subscribes to an event or wildcard ('*') with a handler.
+     * @param eventName The event name or '*'.
+     * @param handler The handler function to call when the event is emitted.
+     * @param params Optional subscription parameters (e.g., once, signal).
+     * @returns A function to unsubscribe the handler.
+     */
     on: <K extends keyof Events>(
       eventName: K | '*',
       handler: GenericHandler<Events, K>,
@@ -81,6 +88,12 @@ const emitron = <Events extends GenericEvents>() => {
 
       return () => instance.off(eventName, actualHandler);
     },
+
+    /**
+     * Unsubscribes a handler from an event or wildcard ('*').
+     * @param eventName The event name or '*'.
+     * @param handler The handler function to remove. If omitted, removes all handlers for the event.
+     */
     off: (eventName, handler) => {
       const handlers = store.get(eventName);
       if (!handlers) {
@@ -99,6 +112,12 @@ const emitron = <Events extends GenericEvents>() => {
 
       handlers.splice(handlerIndex, 1);
     },
+
+    /**
+     * Emits an event, calling all handlers for the event and wildcard ('*').
+     * @param eventName The event name to emit.
+     * @param eventData The data to pass to handlers.
+     */
     emit: (eventName: keyof Events, eventData?: unknown) => {
       const handlers = store.get(eventName);
       if (handlers) {
