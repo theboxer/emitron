@@ -6,12 +6,21 @@
   "module": "dist/emitron.esm.js",
   "browser": "dist/emitron.umd.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    "import": "./dist/emitron.esm.js",
+    "require": "./dist/emitron.cjs.js"
+  },
   "type": "module",
   "scripts": {
     "build": "rollup -c",
     "test": "jest",
     "lint": "eslint . --ext .ts",
-    "test:types": "tsc --noEmit --strict tests/types.ts"
+    "test:types": "tsc --noEmit --strict tests/types.ts",
+    "prepare" : "npm run build",
+    "prepublishOnly" : "npm test && npm run test:types && npm run lint",
+    "preversion" : "npm run lint",
+    "version" : "git add -A src",
+    "postversion" : "git push && git push --tags"
   },
   "keywords": [
     "event emitter",
@@ -37,6 +46,9 @@
   "authors": [
     "Jan Peca <pecajan@gmail.com>"
   ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
     "@rollup/plugin-commonjs": "^25.0.8",

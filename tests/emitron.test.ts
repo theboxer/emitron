@@ -1,6 +1,6 @@
 import emitron from '../src/index';
 
-type MyEvents = {
+type Events = {
   foo: string;
   bar: number;
   baz: { x: boolean };
@@ -13,7 +13,7 @@ describe('emitron', () => {
   });
 
   it('should call handler when event is emitted', () => {
-    const emitter = emitron<MyEvents>();
+    const emitter = emitron<Events>();
     const handler = jest.fn();
     emitter.on('foo', handler);
     emitter.emit('foo', 'hello');
@@ -21,7 +21,7 @@ describe('emitron', () => {
   });
 
   it('should not call handler after off', () => {
-    const emitter = emitron<MyEvents>();
+    const emitter = emitron<Events>();
     const handler = jest.fn();
     emitter.on('bar', handler);
     emitter.off('bar', handler);
@@ -30,7 +30,7 @@ describe('emitron', () => {
   });
 
   it('should call all handlers for the same event', () => {
-    const emitter = emitron<MyEvents>();
+    const emitter = emitron<Events>();
     const handler1 = jest.fn();
     const handler2 = jest.fn();
     emitter.on('baz', handler1);
@@ -41,7 +41,7 @@ describe('emitron', () => {
   });
 
   it('should support wildcard handlers', () => {
-    const emitter = emitron<MyEvents>();
+    const emitter = emitron<Events>();
     const handler = jest.fn();
     emitter.on('*', handler);
     emitter.emit('foo', 'test');
@@ -51,7 +51,7 @@ describe('emitron', () => {
   });
 
   it('should remove all handlers for an event if no handler is passed to off', () => {
-    const emitter = emitron<MyEvents>();
+    const emitter = emitron<Events>();
     const handler1 = jest.fn();
     const handler2 = jest.fn();
     emitter.on('foo', handler1);
@@ -63,7 +63,7 @@ describe('emitron', () => {
   });
 
   it('should support void events', () => {
-    const emitter = emitron<MyEvents>();
+    const emitter = emitron<Events>();
     const handler = jest.fn();
     emitter.on('voidEvent', handler);
     emitter.emit('voidEvent', undefined);
@@ -71,7 +71,7 @@ describe('emitron', () => {
   });
 
   it('should unsubscribe on abort signal', () => {
-    const emitter = emitron<MyEvents>();
+    const emitter = emitron<Events>();
     const handler = jest.fn();
     const controller = new AbortController();
     emitter.on('foo', handler, { signal: controller.signal });
@@ -81,7 +81,7 @@ describe('emitron', () => {
   });
 
   it('should only call handler once when once option is true', () => {
-    const emitter = emitron<MyEvents>();
+    const emitter = emitron<Events>();
     const handler = jest.fn();
     emitter.on('foo', handler, { once: true });
     emitter.emit('foo', 'first');
@@ -91,7 +91,7 @@ describe('emitron', () => {
   });
 
   it('should only call wildcard handler once when once option is true', () => {
-    const emitter = emitron<MyEvents>();
+    const emitter = emitron<Events>();
     const handler = jest.fn();
     emitter.on('*', handler, { once: true });
     emitter.emit('bar', 123);
@@ -101,7 +101,7 @@ describe('emitron', () => {
   });
 
   it('should return an unsubscribe function from on and remove the handler', () => {
-    const emitter = emitron<MyEvents>();
+    const emitter = emitron<Events>();
     const handler = jest.fn();
     const unsubscribe = emitter.on('foo', handler);
     emitter.emit('foo', 'first');
@@ -112,7 +112,7 @@ describe('emitron', () => {
   });
 
   it('should return an unsubscribe function for wildcard handlers', () => {
-    const emitter = emitron<MyEvents>();
+    const emitter = emitron<Events>();
     const handler = jest.fn();
     const unsubscribe = emitter.on('*', handler);
     emitter.emit('bar', 1);
