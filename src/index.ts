@@ -1,10 +1,13 @@
-export type GenericEventType = string | symbol;
-export type GenericEvents = Record<GenericEventType, unknown>;
+export type GenericEventName = string | symbol;
+export type GenericEvents = Record<GenericEventName, unknown>;
 
-export type GenericHandler<Events extends GenericEvents, T extends keyof Events> = (
-  data: Events[T],
-  type: T,
-) => void;
+export type HandlerPayload<Events, Key extends keyof Events = keyof Events> = {
+  [K in keyof Events]: { eventName: K; eventData: Events[K] };
+}[Key];
+
+type GenericHandler<Events, T extends keyof Events> = (payload: HandlerPayload<Events, T>) => void;
+
+export type Handler<E, K extends keyof E = keyof E> = (payload: HandlerPayload<E, K>) => void;
 
 export type GenericStore<Events extends GenericEvents> = Map<
   keyof Events,
@@ -16,15 +19,31 @@ export type SubscribeParams = {
   once?: boolean;
 };
 
-export type Emitron<Events extends GenericEvents> = {
+type KeysExactlyUndefined<T> = {
+  [K in keyof T]: [T[K]] extends [undefined] ? K : never;
+}[keyof T];
+type KeysOptional<T> = {
+  [K in keyof T]: [undefined] extends [T[K]] ? ([T[K]] extends [undefined] ? never : K) : never;
+}[keyof T];
+type KeysRequired<T> = {
+  [K in keyof T]: [undefined] extends [T[K]] ? never : K;
+}[keyof T];
+
+interface Emit<Events extends GenericEvents> {
+  <K extends KeysRequired<Events>>(eventName: K, eventData: Events[K]): void;
+  <K extends KeysOptional<Events>>(eventName: K, eventData?: Events[K]): void;
+  <K extends KeysExactlyUndefined<Events>>(eventName: K, eventData?: undefined): void;
+}
+
+export interface Emitron<Events extends GenericEvents> {
   on: <K extends keyof Events>(
     eventName: K | '*',
     handler: GenericHandler<Events, K>,
     params?: SubscribeParams,
   ) => () => void;
   off: <K extends keyof Events>(eventName: K | '*', handler?: GenericHandler<Events, K>) => void;
-  emit: <K extends keyof Events>(eventName: K, data: Events[K]) => void;
-};
+  emit: Emit<Events>;
+}
 
 const emitron = <Events extends GenericEvents>() => {
   const store: GenericStore<Events> = new Map();
@@ -32,17 +51,21 @@ const emitron = <Events extends GenericEvents>() => {
   type MyHandler = GenericHandler<Events, keyof Events>;
 
   const instance: Emitron<Events> = {
-    on: (eventName, handler, params) => {
+    on: <K extends keyof Events>(
+      eventName: K | '*',
+      handler: GenericHandler<Events, K>,
+      params?: SubscribeParams,
+    ) => {
       if (params?.signal?.aborted) {
         return () => instance.off(eventName, handler);
       }
 
       let actualHandler: MyHandler = handler as MyHandler;
       if (params?.once) {
-        actualHandler = ((data: Events[keyof Events], type: keyof Events) => {
-          instance.off(eventName, actualHandler);
-          (handler as MyHandler)(data, type);
-        }) as MyHandler;
+        actualHandler = (payload) => {
+          instance.off(eventName === '*' ? '*' : payload.eventName, actualHandler);
+          (handler as MyHandler)(payload);
+        };
       }
 
       const handlers = store.get(eventName);
@@ -76,12 +99,12 @@ const emitron = <Events extends GenericEvents>() => {
 
       handlers.splice(handlerIndex, 1);
     },
-    emit: (eventName, data) => {
+    emit: (eventName: keyof Events, eventData?: unknown) => {
       const handlers = store.get(eventName);
       if (handlers) {
         const snapshot = handlers.slice();
         for (let i = 0, len = snapshot.length; i < len; i++) {
-          snapshot[i](data, eventName);
+          snapshot[i]({ eventData, eventName } as HandlerPayload<Events, keyof Events>);
         }
       }
 
@@ -92,7 +115,7 @@ const emitron = <Events extends GenericEvents>() => {
 
       const wildcardSnapshot = wildcardHandlers.slice();
       for (let i = 0, len = wildcardSnapshot.length; i < len; i++) {
-        wildcardSnapshot[i](data, eventName);
+        wildcardSnapshot[i]({ eventData, eventName } as HandlerPayload<Events, keyof Events>);
       }
     },
   };

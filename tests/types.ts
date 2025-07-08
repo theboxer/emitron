@@ -1,0 +1,108 @@
+import emitron, { Handler } from '../src';
+
+type Events = {
+  foo: string;
+  bar: number;
+  baz: boolean;
+  optional?: number;
+  obj: {
+    name: string;
+    age: number;
+  };
+  noData: undefined;
+};
+
+const emitter = emitron<Events>();
+
+const foo: Handler<Events, 'foo'> = (_payload) => {};
+const bar: Handler<Events, 'bar'> = (_payload) => {};
+const baz: Handler<Events, 'baz'> = (_payload) => {};
+const optional: Handler<Events, 'optional'> = (_payload) => {};
+const obj: Handler<Events, 'obj'> = (_payload) => {};
+const noData: Handler<Events, 'noData'> = (_payload) => {};
+const wildcard: Handler<Events> = (_payload) => {};
+const fooBarBaz: Handler<Events, 'foo' | 'bar' | 'baz'> = (_payload) => {};
+
+// =========================
+// on()
+// =========================
+{
+  // Valid usages
+  emitter.on('foo', foo);
+  emitter.on('bar', bar);
+  emitter.on('baz', baz);
+  emitter.on('optional', optional);
+  emitter.on('obj', obj);
+  emitter.on('noData', noData);
+  emitter.on('*', wildcard);
+  emitter.on('foo', fooBarBaz);
+  emitter.on('bar', fooBarBaz);
+  emitter.on('baz', fooBarBaz);
+
+  // Invalid usages
+  // @ts-expect-error - event does not exist
+  emitter.on('notAnEvent', foo);
+  // @ts-expect-error - handler type mismatch
+  emitter.on('foo', bar);
+  // @ts-expect-error - handler type mismatch
+  emitter.on('bar', baz);
+  // @ts-expect-error - handler type mismatch
+  emitter.on('obj', foo);
+}
+
+// =========================
+// off()
+// =========================
+{
+  // Valid usages
+  emitter.off('foo', foo);
+  emitter.off('bar', bar);
+  emitter.off('baz', baz);
+  emitter.off('optional', optional);
+  emitter.off('obj', obj);
+  emitter.off('noData', noData);
+  emitter.off('*', wildcard);
+  emitter.off('foo', fooBarBaz);
+  emitter.off('bar', fooBarBaz);
+  emitter.off('baz', fooBarBaz);
+
+  // Invalid usages
+  // @ts-expect-error - event does not exist
+  emitter.off('notAnEvent', foo);
+  // @ts-expect-error - handler type mismatch
+  emitter.off('foo', bar);
+  // @ts-expect-error - handler type mismatch
+  emitter.off('bar', baz);
+  // @ts-expect-error - handler type mismatch
+  emitter.off('obj', foo);
+}
+
+// =========================
+// emit()
+// =========================
+{
+  // Valid usages
+  emitter.emit('foo', 'hello');
+  emitter.emit('bar', 123);
+  emitter.emit('baz', true);
+  emitter.emit('optional', 42);
+  emitter.emit('optional', undefined);
+  emitter.emit('optional');
+  emitter.emit('obj', { name: 'Alice', age: 30 });
+  emitter.emit('noData', undefined);
+  emitter.emit('noData');
+
+  // Invalid usages
+  // @ts-expect-error - event does not exist
+  emitter.emit('notAnEvent', 'foo');
+  // @ts-expect-error - payload type mismatch
+  emitter.emit('foo', 123);
+  // @ts-expect-error - payload type mismatch
+  emitter.emit('bar', 'hello');
+  // @ts-expect-error - payload type mismatch
+  emitter.emit('obj', 'not an object');
+  // @ts-expect-error - missing payload for required event
+  emitter.emit('foo');
+  // @ts-expect-error - extra payload for noData
+  emitter.emit('noData', 123);
+}

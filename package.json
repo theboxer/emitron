@@ -1,6 +1,6 @@
 {
   "name": "emitron",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A simple pub/sub library.",
   "main": "dist/emitron.cjs.js",
   "module": "dist/emitron.esm.js",
@@ -10,7 +10,8 @@
   "scripts": {
     "build": "rollup -c",
     "test": "jest",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "test:types": "tsc --noEmit --strict tests/types.ts"
   },
   "keywords": [
     "event emitter",
@@ -23,11 +24,19 @@
     "emitter",
     "pubsub"
   ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/theboxer/emitron"
+  },
+  "bugs": {
+    "url": "https://github.com/theboxer/emitron/issues"
+  },
+  "funding": "https://github.com/sponsors/theboxer",
   "homepage": "https://github.com/theboxer/emitron",
   "authors": [
-    "John Peca <pecajan@gmail.com>"
+    "Jan Peca <pecajan@gmail.com>"
   ],
-  "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.30.1",
     "@rollup/plugin-commonjs": "^25.0.8",

@@ -17,7 +17,7 @@ describe('emitron', () => {
     const handler = jest.fn();
     emitter.on('foo', handler);
     emitter.emit('foo', 'hello');
-    expect(handler).toHaveBeenCalledWith('hello', 'foo');
+    expect(handler).toHaveBeenCalledWith({ eventData: 'hello', eventName: 'foo' });
   });
 
   it('should not call handler after off', () => {
@@ -36,8 +36,8 @@ describe('emitron', () => {
     emitter.on('baz', handler1);
     emitter.on('baz', handler2);
     emitter.emit('baz', { x: true });
-    expect(handler1).toHaveBeenCalledWith({ x: true }, 'baz');
-    expect(handler2).toHaveBeenCalledWith({ x: true }, 'baz');
+    expect(handler1).toHaveBeenCalledWith({ eventData: { x: true }, eventName: 'baz' });
+    expect(handler2).toHaveBeenCalledWith({ eventData: { x: true }, eventName: 'baz' });
   });
 
   it('should support wildcard handlers', () => {
@@ -46,8 +46,8 @@ describe('emitron', () => {
     emitter.on('*', handler);
     emitter.emit('foo', 'test');
     emitter.emit('bar', 123);
-    expect(handler).toHaveBeenCalledWith('test', 'foo');
-    expect(handler).toHaveBeenCalledWith(123, 'bar');
+    expect(handler).toHaveBeenCalledWith({ eventData: 'test', eventName: 'foo' });
+    expect(handler).toHaveBeenCalledWith({ eventData: 123, eventName: 'bar' });
   });
 
   it('should remove all handlers for an event if no handler is passed to off', () => {
@@ -67,7 +67,7 @@ describe('emitron', () => {
     const handler = jest.fn();
     emitter.on('voidEvent', handler);
     emitter.emit('voidEvent', undefined);
-    expect(handler).toHaveBeenCalledWith(undefined, 'voidEvent');
+    expect(handler).toHaveBeenCalledWith({ eventData: undefined, eventName: 'voidEvent' });
   });
 
   it('should unsubscribe on abort signal', () => {
@@ -87,7 +87,7 @@ describe('emitron', () => {
     emitter.emit('foo', 'first');
     emitter.emit('foo', 'second');
     expect(handler).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenCalledWith('first', 'foo');
+    expect(handler).toHaveBeenCalledWith({ eventData: 'first', eventName: 'foo' });
   });
 
   it('should only call wildcard handler once when once option is true', () => {
@@ -97,7 +97,7 @@ describe('emitron', () => {
     emitter.emit('bar', 123);
     emitter.emit('baz', { x: false });
     expect(handler).toHaveBeenCalledTimes(1);
-    expect(handler).toHaveBeenCalledWith(123, 'bar');
+    expect(handler).toHaveBeenCalledWith({ eventData: 123, eventName: 'bar' });
   });
 
   it('should return an unsubscribe function from on and remove the handler', () => {
@@ -105,7 +105,7 @@ describe('emitron', () => {
     const handler = jest.fn();
     const unsubscribe = emitter.on('foo', handler);
     emitter.emit('foo', 'first');
-    expect(handler).toHaveBeenCalledWith('first', 'foo');
+    expect(handler).toHaveBeenCalledWith({ eventData: 'first', eventName: 'foo' });
     unsubscribe();
     emitter.emit('foo', 'second');
     expect(handler).toHaveBeenCalledTimes(1);
@@ -116,7 +116,7 @@ describe('emitron', () => {
     const handler = jest.fn();
     const unsubscribe = emitter.on('*', handler);
     emitter.emit('bar', 1);
-    expect(handler).toHaveBeenCalledWith(1, 'bar');
+    expect(handler).toHaveBeenCalledWith({ eventData: 1, eventName: 'bar' });
     unsubscribe();
     emitter.emit('foo', 'test');
     expect(handler).toHaveBeenCalledTimes(1);
