@@ -1,7 +1,7 @@
 {
   "name": "emitron",
-  "version": "0.1.0",
-  "description": "A simple pub/sub library.",
+  "version": "0.2.0",
+  "description": "A simple pub/sub (Event Emitter) library.",
   "main": "dist/emitron.cjs.js",
   "module": "dist/emitron.esm.js",
   "browser": "dist/emitron.umd.js",
