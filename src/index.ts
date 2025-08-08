@@ -41,6 +41,11 @@ export interface Emitron<Events extends GenericEvents> {
     handler: GenericHandler<Events, K>,
     params?: SubscribeParams,
   ) => () => void;
+  onMany: <K extends keyof Events>(
+    eventNames: [K, ...K[]],
+    handler: GenericHandler<Events, K>,
+    params?: SubscribeParams,
+  ) => () => void;
   off: <K extends keyof Events>(eventName: K | '*', handler?: GenericHandler<Events, K>) => void;
   emit: Emit<Events>;
 }
@@ -87,6 +92,47 @@ const emitron = <Events extends GenericEvents>() => {
       });
 
       return () => instance.off(eventName, actualHandler);
+    },
+
+    /**
+     * Subscribes to multiple events with a single handler.
+     * @param eventNames Array of event names.
+     * @param handler The handler function to call when any of the events is emitted.
+     * @param params Optional subscription parameters (e.g., once, signal).
+     * @returns A function to unsubscribe the handler from all events.
+     */
+    onMany: <K extends keyof Events>(
+      eventNames: [K, ...K[]],
+      handler: GenericHandler<Events, K>,
+      params?: SubscribeParams,
+    ) => {
+      if (params?.once) {
+        let hasBeenCalled = false;
+        const onceHandler: GenericHandler<Events, K> = (payload) => {
+          if (hasBeenCalled) return;
+          hasBeenCalled = true;
+
+          unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+
+          handler(payload);
+        };
+
+        const unsubscribeFunctions = eventNames.map((eventName) =>
+          instance.on(eventName, onceHandler, { signal: params.signal }),
+        );
+
+        return () => {
+          unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+        };
+      }
+
+      const unsubscribeFunctions = eventNames.map((eventName) =>
+        instance.on(eventName, handler, params),
+      );
+
+      return () => {
+        unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+      };
     },
 
     /**

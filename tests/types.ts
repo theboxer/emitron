@@ -51,6 +51,40 @@ const fooBarBaz: Handler<Events, 'foo' | 'bar' | 'baz'> = (_payload) => {};
 }
 
 // =========================
+// onMany()
+// =========================
+{
+  // Valid usages
+  emitter.onMany(['foo', 'bar', 'baz'], fooBarBaz);
+  emitter.onMany(['foo'], foo);
+  emitter.onMany(['bar'], bar);
+  emitter.onMany(['foo', 'bar'], fooBarBaz);
+  emitter.onMany(['bar', 'baz'], fooBarBaz);
+  emitter.onMany(['foo', 'bar', 'baz'], wildcard);
+  emitter.onMany(['optional'], optional);
+  emitter.onMany(['obj'], obj);
+  emitter.onMany(['noData'], noData);
+
+  // Invalid usages
+  // @ts-expect-error - event does not exist
+  emitter.onMany(['foo', 'bar'], foo);
+  // @ts-expect-error - event does not exist
+  emitter.onMany(['notAnEvent'], foo);
+  // @ts-expect-error - event does not exist
+  emitter.onMany(['foo', 'notAnEvent'], fooBarBaz);
+  // @ts-expect-error - handler type mismatch (foo handler can't handle bar events)
+  emitter.onMany(['foo', 'bar'], foo);
+  // @ts-expect-error - handler type mismatch (bar handler can't handle foo events)
+  emitter.onMany(['foo', 'bar'], bar);
+  // @ts-expect-error - handler type mismatch (obj handler can't handle string events)
+  emitter.onMany(['foo'], obj);
+  // @ts-expect-error - incompatible event types (foo is string, obj is object)
+  emitter.onMany(['foo', 'obj'], fooBarBaz);
+  // @ts-expect-error - empty array not allowed
+  emitter.onMany([], foo);
+}
+
+// =========================
 // off()
 // =========================
 {

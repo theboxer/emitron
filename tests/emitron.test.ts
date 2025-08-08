@@ -121,4 +121,123 @@ describe('emitron', () => {
     emitter.emit('foo', 'test');
     expect(handler).toHaveBeenCalledTimes(1);
   });
+
+  it('should register a handler for multiple events', () => {
+    const emitter = emitron<Events>();
+    const handler = jest.fn();
+
+    emitter.onMany(['foo', 'bar'], handler);
+
+    emitter.emit('bar', 1);
+    expect(handler).toHaveBeenCalledWith({ eventData: 1, eventName: 'bar' });
+    emitter.emit('foo', 'test');
+    expect(handler).toHaveBeenCalledWith({ eventData: 'test', eventName: 'foo' });
+    expect(handler).toHaveBeenCalledTimes(2);
+  });
+
+  it('should return an unsubscribe function from onMany that removes handler from all events', () => {
+    const emitter = emitron<Events>();
+    const handler = jest.fn();
+
+    const unsubscribe = emitter.onMany(['foo', 'bar'], handler);
+
+    emitter.emit('foo', 'first');
+    emitter.emit('bar', 1);
+    expect(handler).toHaveBeenCalledTimes(2);
+
+    unsubscribe();
+
+    emitter.emit('foo', 'second');
+    emitter.emit('bar', 2);
+    expect(handler).toHaveBeenCalledTimes(2);
+  });
+
+  it('should support once option with onMany', () => {
+    const emitter = emitron<Events>();
+    const handler = jest.fn();
+
+    emitter.onMany(['foo', 'bar'], handler, { once: true });
+
+    emitter.emit('foo', 'first');
+    expect(handler).toHaveBeenCalledTimes(1);
+
+    emitter.emit('bar', 1);
+    emitter.emit('foo', 'second');
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it('should support abort signal with onMany', () => {
+    const emitter = emitron<Events>();
+    const handler = jest.fn();
+    const controller = new AbortController();
+
+    emitter.onMany(['foo', 'bar'], handler, { signal: controller.signal });
+
+    emitter.emit('foo', 'before abort');
+    expect(handler).toHaveBeenCalledTimes(1);
+
+    controller.abort();
+
+    emitter.emit('foo', 'after abort');
+    emitter.emit('bar', 1);
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it('should handle onMany with single event', () => {
+    const emitter = emitron<Events>();
+    const handler = jest.fn();
+
+    emitter.onMany(['baz'], handler);
+
+    emitter.emit('baz', { x: true });
+    expect(handler).toHaveBeenCalledWith({ eventData: { x: true }, eventName: 'baz' });
+  });
+
+  it('should handle onMany with all events', () => {
+    const emitter = emitron<Events>();
+    const handler = jest.fn();
+
+    emitter.onMany(['foo', 'bar', 'baz', 'voidEvent'], handler);
+
+    emitter.emit('foo', 'test');
+    emitter.emit('bar', 42);
+    emitter.emit('baz', { x: false });
+    emitter.emit('voidEvent', undefined);
+
+    expect(handler).toHaveBeenCalledTimes(4);
+    expect(handler).toHaveBeenNthCalledWith(1, { eventData: 'test', eventName: 'foo' });
+    expect(handler).toHaveBeenNthCalledWith(2, { eventData: 42, eventName: 'bar' });
+    expect(handler).toHaveBeenNthCalledWith(3, { eventData: { x: false }, eventName: 'baz' });
+    expect(handler).toHaveBeenNthCalledWith(4, { eventData: undefined, eventName: 'voidEvent' });
+  });
+
+  it('should allow multiple onMany registrations for same events', () => {
+    const emitter = emitron<Events>();
+    const handler1 = jest.fn();
+    const handler2 = jest.fn();
+
+    emitter.onMany(['foo', 'bar'], handler1);
+    emitter.onMany(['foo', 'bar'], handler2);
+
+    emitter.emit('foo', 'test');
+
+    expect(handler1).toHaveBeenCalledWith({ eventData: 'test', eventName: 'foo' });
+    expect(handler2).toHaveBeenCalledWith({ eventData: 'test', eventName: 'foo' });
+  });
+
+  it('should work with off() to remove onMany handlers', () => {
+    const emitter = emitron<Events>();
+    const handler = jest.fn();
+
+    emitter.onMany(['foo', 'bar'], handler);
+
+    emitter.emit('foo', 'first');
+    expect(handler).toHaveBeenCalledTimes(1);
+
+    emitter.off('foo', handler);
+
+    emitter.emit('foo', 'second');
+    emitter.emit('bar', 1);
+    expect(handler).toHaveBeenCalledTimes(2); // only bar event should trigger
+  });
 });

@@ -148,6 +148,56 @@ emitter.on(
 controller.abort();
 ```
 
+### Subscribing to Multiple Events
+
+Use `onMany` to subscribe to multiple events with a single handler:
+
+```typescript
+// Subscribe to multiple specific events
+const unsubscribe = emitter.onMany(['foo', 'bar'], (payload) => {
+  if (payload.eventName === 'foo') {
+    // payload.eventData is string
+    console.log('foo:', payload.eventData.toUpperCase());
+  } else if (payload.eventName === 'bar') {
+    // payload.eventData is number
+    console.log('bar:', payload.eventData + 1);
+  }
+});
+
+// Later, to remove the handler from all subscribed events:
+unsubscribe();
+```
+
+#### One-time Listener for Multiple Events
+
+**Note:** When using `{ once: true }` with `onMany`, the handler will trigger only once in total across all the specified events, not once per event.
+
+```typescript
+emitter.onMany(
+  ['foo', 'bar'],
+  (payload) => {
+    console.log(`${payload.eventName} event (once):`, payload.eventData);
+    // This handler will only execute once, regardless of which event ('foo' or 'bar') is emitted first
+  },
+  { once: true },
+);
+```
+
+#### Abortable Listener for Multiple Events
+
+```typescript
+const controller = new AbortController();
+emitter.onMany(
+  ['foo', 'bar'],
+  (payload) => {
+    console.log(`${payload.eventName} event (abortable):`, payload.eventData);
+  },
+  { signal: controller.signal },
+);
+// Later, to remove the listener from all events:
+controller.abort();
+```
+
 ### Emitting Events
 
 ```typescript
@@ -168,6 +218,7 @@ emitter.off('foo');
 ## API
 
 - `on(eventName, handler, params?)`: Subscribe to an event. Returns an unsubscribe function. Supports wildcard (`'*'`), one-time, and abortable listeners.
+- `onMany(eventNames, handler, params?)`: Subscribe to multiple events with a single handler. Returns an unsubscribe function that removes the handler from all subscribed events.
 - `off(eventName, handler?)`: Unsubscribe a handler or all handlers for an event.
 - `emit(eventName, data?)`: Emit an event with data.
 
